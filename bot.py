@@ -12,17 +12,48 @@ class ResultatDefiView(discord.ui.View):
 
     @discord.ui.button(label="Défi réussi", emoji="✅", style=discord.ButtonStyle.success)
     async def reussi(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        self.clear_items()
+        self.add_item(FermerDefiButton())
+
         await interaction.response.edit_message(
             content=f"✅ Défi réussi validé par {interaction.user.mention}",
-            view=None
+            view=self
         )
+
 
     @discord.ui.button(label="Défi échoué", emoji="❌", style=discord.ButtonStyle.danger)
     async def echoue(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        self.clear_items()
+        self.add_item(FermerDefiButton())
+
         await interaction.response.edit_message(
             content=f"❌ Défi échoué validé par {interaction.user.mention}",
-            view=None
+            view=self
         )
+
+
+class FermerDefiButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(
+            label="Fermer le défi",
+            emoji="🔒",
+            style=discord.ButtonStyle.danger
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+
+        if not interaction.user.guild_permissions.manage_threads:
+            await interaction.response.send_message(
+                "❌ Tu n'as pas la permission de fermer ce défi.",
+                ephemeral=True
+            )
+            return
+
+        await interaction.response.send_message("🔒 Défi fermé.")
+
+        await interaction.channel.edit(locked=True)
 
 
 class ChoixView(discord.ui.View):
@@ -59,22 +90,6 @@ class ChoixView(discord.ui.View):
             view=ResultatDefiView()
         )
 
-
-    @discord.ui.button(label="Fermer le défi", emoji="❌", style=discord.ButtonStyle.danger)
-    async def fermer(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-        if not interaction.user.guild_permissions.manage_threads:
-            await interaction.response.send_message(
-                "❌ Tu n'as pas la permission.",
-                ephemeral=True
-            )
-            return
-
-        await interaction.response.send_message(
-            "🔒 Défi fermé."
-        )
-
-        await interaction.channel.edit(archived=True)
 
 
 intents = discord.Intents.default()
